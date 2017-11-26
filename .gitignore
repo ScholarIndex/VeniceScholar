@@ -1,0 +1,12 @@
+/vendor
+/node_modules
+Homestead.yaml
+Homestead.json
+.env
+.svn/
+node_modules/
+vendor/
+storage/logs/
+storage/framework/views/
+storage/framework/cache/
+storage/framework/sessions/

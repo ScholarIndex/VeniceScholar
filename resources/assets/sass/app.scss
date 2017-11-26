@@ -1,0 +1,801 @@
+/* RESETER */
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+body              { line-height: 1; }
+ol, ul            { list-style: none; }
+blockquote, q     { quotes: none; }
+blockquote:before,
+blockquote:after,
+q:before, q:after { content: ''; content: none; }
+table             { border-collapse: collapse; border-spacing: 0; }
+
+html              { box-sizing: border-box; }
+*,
+*:before,
+*:after           { box-sizing: inherit; }
+
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+@mixin no-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+
+$headerHeight: 80px;
+$colwidth: 200px;
+$darkblue : #0A3B4C;
+$lightblue: #D5E3E4;
+$darkyellow : #EEA731;
+$grey: #D5E3E4;
+
+.bar {
+  fill: $grey;
+}
+
+
+a.button { cursor:pointer; background: $darkyellow; color: $darkblue; height: 40px; width: 200px; display: inline-block; line-height: 40px; text-align:center; border-radius: 4px; font-size: 18px;
+  &:hover { color: $darkblue;font-weight: normal; }
+}
+
+html, body { overflow:hidden; }
+body {
+
+  margin:0;
+  padding:0;
+  font-family : Arial;
+  font-size:14px;
+  color: $darkblue;
+}
+
+
+#searchmenu {
+  .searchbar {
+    background: $darkblue;
+    height:$headerHeight;
+    display: flex;
+
+    .about {        line-height : 80px; color: $darkyellow; position: absolute; right: 70px; font-weight: bold; text-decoration:none; }
+    .loginname {    line-height : 80px; color: $darkyellow; position: absolute; right: 290px; font-weight: bold;text-decoration:none; }
+    .statistics {   line-height : 80px; color: $darkyellow; position: absolute; right: 165px; font-weight: bold;text-decoration:none; }
+
+    .title { padding:20px; width: 200px; color: $lightblue; font-size: 18px; line-height:20px; display: inline-block; }
+    .searchform {
+      .headfield {
+        display: inline-block;
+        position:relative;
+
+        input {width: 500px; height: 40px; border-radius: 4px;border:2px solid $lightblue; padding-left: 50px; font-size:16px; margin-right:20px; margin-top:20px; }
+         i.fa {
+           cursor:pointer;
+            font-family: FontAwesome;
+            left:20px;
+            position:absolute;
+            top:30px;
+         }
+      }
+
+      ul.filters { color: $lightblue; display: inline-block; font-size:14px;}
+
+    }
+  }
+
+
+}
+
+
+
+        li.chk { display: inline; cursor:pointer; margin-right:20px;
+              &:before {
+                content: "";
+                display:inline-block;
+                width: 16px;
+                height: 16px;
+                margin-right: 10px;
+                vertical-align:middle;
+                background-image: url("chbx.png");
+                background-repeat: no-repeat;
+                background-size: 32px;
+                background-position: center right;
+
+              }
+
+              &.checked {
+                &:before { background-position: center left; }
+              }
+        }
+
+.mainsearch {
+  padding-top: 200px;
+  margin:auto;
+  width: 40%;
+
+  &.adv_open {
+    .searchfield {
+      .fa-caret-right {display:none;}
+      .fa-caret-down {display:block;}
+
+    }
+    .advancedsearch { display:block; }
+    ul.filters { display:none; }
+  }
+
+  .searchfield {
+     position:relative;
+     input {width: 100%; height: 60px; border-radius: 4px;border:2px solid $lightblue; padding-left: 50px; font-size:18px; margin-right:20px; margin-top:20px; outline: none;}
+
+     &:before {
+        content: "\f002";
+        font-family: FontAwesome;
+        left:10px;
+        position:absolute;
+        top:30px;
+     }
+     .fa-caret-down { display: none; }
+     .fa-caret-right { display: block; }
+     .fa {
+        color: $darkyellow;
+        font-family: FontAwesome;
+        right:20px;
+        font-size:24px;
+        position:absolute;
+        top:35px;
+        cursor:pointer;
+     }
+
+
+  }
+
+        ul.filters { line-height: 80px;color: black; display: inline-block; font-size:14px; width: 100%; text-align:center; }
+
+  .advancedsearch {
+    display: none;
+    background: #F9F9F9;
+    position:relative;
+    color: $darkblue;
+    width: 94%;
+    padding:30px;
+    margin:auto;
+    li { margin-bottom:3px; }
+
+    strong { font-weight: bold; }
+    input { width: 250px; padding:4px;
+      &.small { width: 100px; }
+    }
+    span { display: inline-block; width: 250px;}
+    .chkboxanywhere {
+      font-size:14px;
+      cursor:pointer;
+      margin-bottom:10px;
+      &:before { margin-right:10px;  font-family: FontAwesome; font-size:16px;}
+      font-family: "Arial";
+    }
+
+    .closebutton { position: absolute; right: 10px; top:5px; color: black;font-size:40px; text-decoration:none; }
+    .searchbutton { background: $darkyellow; color: $darkblue; font-size:1.3em;padding:15px 40px;  display:inline-block;}
+
+      ul.advfilters { line-height: 80px; margin-top:100px; color: black; display: inline-block; font-size:14px; width: 100%;
+
+
+      }
+
+  }
+
+}
+
+
+#screenwrapper {
+  position: fixed;
+  padding: 200px;
+  text-align:center;
+  z-index: 10000;
+  display:none;
+  background: rgba(0,0,0,.85);
+  top:0;left:0;right:0;bottom:0;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+ /* @media all and (max-width: 1430px)  { display: block; } */
+}
+
+
+
+.sideinfo {
+  background: $darkblue;
+  width: 200px;
+  position: absolute;
+  left:0;
+  top: $headerHeight;
+  bottom:0;
+  color: $grey;
+  padding:20px;
+  li.sub {
+    margin-bottom:20px;
+    cursor:pointer;
+    line-height: 2em;
+    i { color: $darkyellow; }
+    ul {display: none; }
+    &.open ul { display:block; }
+    li.chk { display:block; font-size:0.8em; margin-right:0;}
+
+    .nm { display: inline-block; width: 90px; vertical-align:middle;overflow: hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .cn { display: inline-block; width: 40px; text-align:right; vertical-align:middle;overflow: hidden; white-space:nowrap; text-overflow:ellipsis;}
+  }
+
+    .sub:before {
+       content: "\f0da";
+       font-family: FontAwesome;
+       color: $darkyellow;
+       margin-right: 10px;
+       display: inline-block;
+       width: 10px;
+    }
+
+    .sub.open:before {
+       content: "\f0d7";
+    }
+
+  .barchart { width: 160px; height: 75px; }
+
+  .yearfilter {
+    margin-bottom: 60px;
+    .yearslider {
+      font-size: 0.7em; margin-top:40px; margin-bottom:20px;
+      .noUi-connect { background: $darkyellow; }
+      .noUi-value { margin-top: 13px; }
+
+
+    }
+    ul { margin-top:5px;  }
+    &.disabled .yearslider {
+      opacity: 0.3;
+       .noUi-connect { background: #888; }
+     }
+   }
+
+
+    .allfilters { color: $darkyellow; cursor:pointer; font-size:0.8em;}
+}
+
+
+.statzone {
+  position:absolute;
+  top: $headerHeight;
+  bottom: 0;
+  right:0;
+  left: 0;
+  overflow:hidden;
+  padding:40px;
+
+  h4 { color: #ECA730; margin-bottom: 30px; font-size: 1.2em; font-weight:bold; }
+  h5 { color: #0A3B4C; font-size: 1.2em; font-weight: bold; }
+
+  ul { margin-top:10px; margin-bottom: 20px; color:#0A3B4C;}
+  li { line-height: 1.5em; }
+
+  .col1 { width: 300px; float:left; }
+
+}
+
+
+.resultzone {
+  position:absolute;
+  top: $headerHeight;
+  bottom: 0;
+  right:0;
+  left: 200px;
+  overflow:hidden;
+
+  .resultheaders {
+    height:$headerHeight;
+    line-height: $headerHeight - 10px;
+    padding-top:10px;
+    li.cat { display:block; cursor:pointer; opacity: 0.5; position: relative; float:left; width: 160px; text-align:center; border-bottom: 1px solid black;
+      span { font-weight: bold; border-radius: 35px;  line-height:35px; background: #999; margin-right:10px; display: inline-block; width: 35px; height: 35px;}
+      &.special { border-left: 1px solid black; }
+      &.active { opacity: 1; font-weight: bold; }
+      &:before {
+        content: "";
+        height: 10px;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        margin-top: -10px;
+        left: 0;
+        background: red;
+      }
+      &.special {
+        &:before {
+          width: 90%;
+          left: 5%;
+        }
+      }
+
+      &.authors         { &:before, span { background : #DC6D72;}   }
+      &.monographies    { &:before, span { background : #EC8CDB;}   }
+      &.articles        { &:before, span { background : #6ACE36;}   }
+      &.contributions   { &:before, span { background : #58E0D1;}   }
+      &.primary_sources  { &:before, span { background : #dddddd;}   }
+      &.references      { &:before, span { background : #A95FBE;}   }
+
+
+
+    }
+    li.pagin {
+      font-weight:bold;
+      font-size:1.2em;
+      position: relative; float:left;
+      width: 160px;
+      text-align:center;
+      line-height:2.2em;
+
+      .fa-chevron-left,.fa-chevron-right { cursor:pointer;   }
+
+      .fa-chevron-left { margin-right: 10px; }
+      .fa-chevron-right { margin-left: 10px; }
+
+    }
+  }
+    .results { padding:20px;
+    position: absolute;
+    left: 0;
+    right:0;
+    bottom:0;
+    top: $headerHeight;
+    overflow-y:scroll;
+
+      .result {
+        cursor:pointer;
+        padding: 20px 20px;
+        margin-bottom: 3px;
+        min-height: 126px;
+        &:hover{ background: #f9f9f9; }
+        p.title { font-weight: bold; margin-bottom:10px;}
+        p.subtitle {}
+        p.title, p.subtitle { white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
+
+
+        .graph { border-right: 1px solid black; padding-right:20px; margin-right: 20px; margin-top:10px;vertical-align:top; display:inline-block;}
+        ul { display:inline-block;
+          li { font-size: 12px; line-height: 16px; }
+        }
+
+        &.authors         { border-left: 8px solid  #DC6D72;}
+        &.monographies    { border-left: 8px solid  #EC8CDB;}
+        &.articles        { border-left: 8px solid  #6ACE36;}
+        &.contributions   { border-left: 8px solid  #58E0D1;}
+        &.primary_sources  { border-left: 8px solid  #dddddd;}
+        &.references      { border-left: 8px solid  #A95FBE;}
+
+        .fa.fa-link { color: $darkyellow; }
+        .shortdetails {font-size:0.8em;}
+      }
+
+      .hasMore {
+        padding: 30px;
+        background: #efefef;
+        text-align:center;
+        font-weight: bold;
+        margin-top:20px;
+        cursor: pointer;
+        border-radius: 10px;
+
+      }
+    }
+
+}
+
+.detailszone {
+  display:none;
+  position: absolute;
+  z-index:6000;
+  background:white;
+  color: #0a3b4c;
+  bottom:0;
+  padding-bottom:60px;
+  left:0;
+  right:0;
+  top:$headerHeight;
+  overflow: auto;
+  .fa-times { cursor:pointer; position: aboslute; right: 20px; top:20px; position: absolute; color: #555;}
+
+
+  ul.citationsButtons {
+    margin-bottom:30px;
+    li { width: 190px; cursor:pointer; border: 2px solid #aaa; text-align:center; display: inline-block; margin-left: 24px; padding: 10px; color: #aaa; font-weight: bold;
+
+      &.active { border-color: $darkyellow; color: inherit; }
+    }
+
+
+  }
+
+  ul.detailsheaders {
+   >li { display: inline-block; width: 200px; padding: 15px; text-align:center; font-size: 1.3em; vertical-align:top;
+        border-top:8px solid white;
+        
+    
+
+        &.rcat { cursor:pointer;}
+
+     small { font-size:0.7em; }
+        &:first-child { white-space:nowrap; line-height: 1.5em;font-weight:bold; text-align:left; 
+          a { color: #DC6D72; text-decoration:none; font-size:0.7em; display:inline-block; margin-left:20px; font-weight:normal;}
+          span { font-size: 0.8em; }
+
+          &.authors         { border-top: 8px solid  #DC6D72;}
+          &.monographies    { border-top: 8px solid  #EC8CDB;}
+          &.articles        { border-top: 8px solid  #6ACE36;}
+          &.contributions   { border-top: 8px solid  #58E0D1;}
+          &.primary_sources  { border-top: 8px solid  #dddddd;}
+          &.references      { border-top: 8px solid  #A95FBE;}
+
+        }
+
+
+
+    &.active { border-top: 8px solid #0A3B4C; color: #0A3B4C; font-weight: bold;}
+   }
+
+  }
+
+  table {
+    width:100%;
+
+    font-size:0.9em;
+    th.h2 { font-size:1.5em; font-weight:normal; }
+    th.h2:before { content:""; width:0; height:37px;margin-top:-8px;  border-left: 8px solid #0a3b4c; position: absolute; left:0;}
+
+
+    th.h2.authors:before         { border-left-color : #DC6D72;}
+    th.h2.monographies:before    { border-left-color : #EC8CDB;}
+    th.h2.articles:before        { border-left-color : #6ACE36;}
+    th.h2.contributions :before  { border-left-color : #58E0D1;}
+    th.h2.primary_sources:before  { border-left-color : #dddddd;}
+    th.h2.references:before      { border-left-color : #A95FBE;}
+
+
+
+    td:first-child { width: 600px; max-width:600px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;}
+    margin: auto;
+    width: calc(100% - 46px);
+    tr { }
+    td,th {  text-align:left; vertical-align:middle; padding:8px;}
+    th { font-weight: bold; }
+    i { color: $darkyellow; cursor:pointer;}
+    tbody { border-top: 30px solid white; }
+    tbody.lines { border-top: none; }
+    tbody.lines tr:nth-child(odd) {background: #efefef; }
+    tbody.lines tr.highlight { background: #a5cddc;}
+    tbody.nestedps tr.highlight { background: #a5cddc;}
+  }
+}
+
+
+.smalldetailszone {
+
+  position: absolute;
+  z-index:5000;
+  background:#F9F9F9;
+  color: #0a3b4c;
+  bottom:0;
+  padding:6px;
+  width:400px;
+  right:0;
+  margin-right:-400px;
+  top:$headerHeight;
+  overflow: auto;
+
+  .top { font-size:0; }
+  .top div {width:49%; margin:0; display: inline-block; padding: 15px 0; vertical-align:middle; }
+
+  .title { font-size: 18px; font-weight: bold; overflow:hidden; text-overflow: ellipsis; white-space:nowrap;}
+  .buttons { font-size:12px; position:relative;
+  * {  margin-left:20px; margin-right: 20px; }
+    a { text-decoration:none; color:#DC6D72; }
+     text-align:center;
+    .fa-arrows-alt, .fa-times { cursor:pointer;  color: #555; }
+    .fa-times { position: absolute; margin-top:-0.5px;}
+    .fa-arrows-alt {}
+
+  }
+  .profile { font-size:12px;
+          &.authors         { border-top: 5px solid  #DC6D72;}
+          &.monographies    { border-top: 5px solid  #EC8CDB;}
+          &.articles        { border-top: 5px solid  #6ACE36;}
+          &.contributions   { border-top: 5px solid  #58E0D1;}
+          &.primary_sources  { border-top: 5px solid  #dddddd;}
+          &.references      { border-top: 5px solid  #A95FBE;}
+
+
+    text-align:center;
+  }
+  .citationslink { text-align:center;border-top: 1px solid #aaa;font-size:12px; color: $darkyellow; cursor:pointer}
+
+
+
+  &>ul {
+    padding: 25px;
+
+    &>li {
+      font-size:1em;
+      line-height:1.7em;
+      cursor:pointer;
+
+      &>span:after {
+        content: "\f0da";
+        font-family: Fontawesome;
+        color: $darkyellow;
+        margin-left:20px;
+      }
+
+      &.open>span:after {
+        content: "\f0d7";
+      }
+      &.open>ul { display:block; }
+      &>ul { display:none;     font-size:0.8em; margin-bottom:20px;
+
+        &>li {
+          white-space:nowrap;
+          overflow:hidden;
+          text-overflow:ellipsis;
+        }
+      }
+
+   }
+
+
+  }
+
+
+}
+
+.refpanel {
+   width: 45%;
+   position: fixed;
+   right: 0;
+   top: $headerHeight;
+   bottom:0;
+   background: rgba(10, 59, 76, 0.9);
+   color: white;
+   padding: 20px;
+   display:none;
+   font-size: 1.1em;
+   line-height: 1.3em;
+   p { margin-bottom: 20px; }
+   .fa-times { color: $darkyellow; }
+
+   .fa-link { color: $darkyellow; }
+
+   overflow-y:scroll;
+
+        &::-webkit-scrollbar-track {
+          background-color: transparent;
+
+        }
+
+        &::-webkit-scrollbar {
+          width: 24px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          border: 8px solid rgba(10, 59, 76, 0.9);
+          background-color: #EAF1F1;
+        }
+}
+
+.chart,.smallchart {
+
+  &.small { height:100px;  }
+  rect {
+    cursor:pointer;
+  }
+
+  &.citing {
+    rect.citing_h { fill: #0A3B4C; }
+    rect.cited_h { fill: #aaa; }
+  }
+
+  &.cited {
+    rect.citing_h { fill: #aaa;  }
+    rect.cited_h { fill: #0A3B4C; }
+  }
+
+  &.references { display: none; }
+  height: 200px;
+  background:white;
+  margin: 25px;
+  width: calc(100% - 50px);
+
+svg {
+  box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.axis {
+
+  text {
+    font-size: 10px;
+  }
+}
+
+&.cited, &.citing {
+  .x.axis.b {line,path {display:none; }}
+
+
+}
+
+&.publications {
+  .axis { path,line { display: none; } }
+
+}
+
+.dot {
+  stroke: #aaa;
+  stroke-width: 2px;
+  cursor: pointer;
+
+  &.authors         { fill:  #DC6D72;}
+  &.books    { fill:  #EC8CDB;}
+  &.articles        { fill:  #6ACE36;}
+  &.contributions   { fill:  #58E0D1;}
+  &.primary_sources  { fill:  #dddddd;}
+  &.references      { fill:  #A95FBE;}
+}
+
+
+
+
+}
+
+.d3-tip {
+  font: 12px sans-serif;
+  padding: 12px;
+  background: #efefef;
+  border:2px solid #dedede;
+  color: #0A3B4C;
+  width: 180px;
+  border-radius: 5px;
+  z-index: 6000;
+  &.cit { width: auto; }
+  div {
+    white-space: nowrap;
+    text-overflow:ellipsis;
+    overflow:hidden;
+    line-height: 1.5;
+  }
+}
+
+.searchreference, .searchinreference {
+     position:relative; margin-left:30px;
+     input {width: 300px; height: 40px; border-radius: 4px;border:2px solid $lightblue; padding-left: 50px; font-size:14px; color:#aaa;  outline: none;}
+
+     &:before {
+        content: "\f002";
+        font-family: FontAwesome;
+        left:10px;
+        position:absolute;
+        top:13px;
+        color: #0A3B4C;
+     }
+}
+
+.searchinreference {
+  width:300px;
+  margin-bottom: 20px;
+  margin-left:0;
+ &:before {
+     top:10px;
+   }
+}
+
+
+.nestedps {
+  .h2 span { color:$darkyellow; font-size: 0.6em; }
+  display:none;
+  i.fa-caret-right { margin-left: 20px; }
+
+  tr.openable { cursor:pointer; }
+
+ tr:nth-child(odd) {background: #efefef; }
+ tr:nth-child(1), tr:nth-child(2) { background: white; }
+
+ .label { display:inline-block; font-weight:bold; border-radius:4px; background:$darkyellow; color:#0A3B4C; font-size:0.8em; padding:3px; margin-right:5px;margin-top:-4px;}
+
+}
+.nestedps[data-level="root"] { display:table-row-group; }
+
+
+
+.fa.fa-question-circle { font-size: 1.5em; color:: $darkyellow; position: absolute; right: 25px; line-height:80px; cursor:pointer;}
+#helpwrapper {
+  position: fixed;
+  z-index: 10000;
+  display:none;
+  background: rgba(0,0,0,0.7);
+  top:0;left:0;right:0;bottom:0;
+  color: white;
+  font-family: Handlee;
+  font-weight: bold;
+  .fa.fa-question-circle { color:: white; position: absolute; right: 25px;  cursor:pointer;}
+  p:before { display:none;
+    content:"";
+    background: white;
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    position: absolute; 
+  }
+
+  p { display: none; position: absolute;}
+  
+  p.nohelp { display: block; top:100px; left:100px; font-size:24px;}
+
+  &[data-step="search"] { p.search { display: block; } p.nohelp { display: none; } }
+  &[data-step="search_ref"]{ p.search_ref { display: block; } p.nohelp { display: none; } }
+  &[data-step="author_details_citations"]{ p.author_details_citations { display: block; } p.nohelp { display: none; } }
+  &[data-step="author_details_publications"]{ p.author_details_publications { display: block; } p.nohelp { display: none; } }
+  &[data-step="author_small_details"]{ p.author_small_details { display: block; } p.nohelp { display: none; } }
+  &[data-step="references_panel"]{ p.references_panel { display: block; } p.nohelp { display: none; } }
+
+
+  p.search.c1 { left: 10px; top: 350px;  }
+  p.search.c2 { left: 400px; top: 35px;  }
+  p.search.c3 { right:50px; top: 10px;  }
+  p.search.c4 { left: 300px; top: 93px;  }
+  p.search.c5 { left: 420px; top: 391px;  }
+  p.search.c6 { left: 420px; top: 410px;  }
+  p.search.c7 { left: 1150px; top: 85px;  }
+  p.search.c8 { left: 850px; top: 145px;  }
+  p.search.c9 { left: 250px; top: 175px;  }
+  
+  p.search_ref.c1 { left: 240px; top: 180px;  }
+  p.search_ref.c2 { left: 320px; top: 250px;  }
+  
+  p.author_details_citations.c1 { left: 10px; top: 464px;  }
+  p.author_details_citations.c2 { left: 264px; top: 464px;  }
+  p.author_details_citations.c3 { left: 210px; top: 768px;  }
+  p.author_details_citations.c4 { left: 710px; top: 541px;  }
+  p.author_details_citations.c5 { left: 400px; top: 261px;  }
+
+
+  p.author_details_publications.c1 { left: 30px; top: 130px;  }
+  p.author_details_publications.c2 { left: 255px; top: 130px;  }
+  p.author_details_publications.c3 { left:612px; top: 150px;  }
+  p.author_details_publications.c4 { left: 830px; top: 85px;  }
+  p.author_details_publications.c5 { right: 20px; top: 131px;  }
+  p.author_details_publications.c6 { left: 620px; top: 450px;  }
+
+  p.references_panel.c1 { right: 310px; top: 470px;  }
+  p.references_panel.c2 { right: 560px; top: 115px;  }
+
+  p.author_small_details.c1 { right: 20px; top: 120px;  }
+  p.author_small_details.c2 { right: 100px; top: 85px;  }
+  p.author_small_details.c4 { right: 20px; top: 175px;  }
+  p.author_small_details.c5 { right: 54px; top: 230px;  }
+  p.author_small_details.c6 { right: 80px; top: 335px;  }
+
+}
+
+.fa.fa-pulse { display:none; position: fixed; font-size: 10em; top: 50%; left: 50%; margin-left:-1em; color:#dedede; z-index:999999;} 
