@@ -42,7 +42,7 @@
         <div class="container">
             <div class="content">
                 <div class="title">Venice Scholar</div>
-				<p style="font-size:2.4em;">v1.0_alpha</p>
+				<p style="font-size:2.4em;">v2.0_beta</p>
 		<p><a href="/about">The Project</a> | <?php echo ( (Auth::check()) ? "<a href='/search'>HomeSearch</a> | " : ""); ?><a href="/auth/login">Login</a> | <a href="/auth/logout">Logout</a> | <?php echo ( (Auth::check()) ? Auth::user()->login." (".Auth::user()->email.")" : "Not logged in"); ?><!-- | <a href="/auth/register">Register</a>-->
 
 
