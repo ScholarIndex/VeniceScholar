@@ -10,7 +10,7 @@ The [Venice Scholar](http://www.venicescholar.eu/) was developed in the context 
 
 The development of the [Venetica section of the Venice Scholar](http://venicescholar.eu/venetica) and of the Europeana sidebar was made possible by a [Europeana Research Grant](https://pro.europeana.eu/services/facilitating-innovation/grants-programme).
 
-## Team/Acknowledgments
+## Team
 
 - Vincent Barbay (development)
 - Laurent Bolli (design)
