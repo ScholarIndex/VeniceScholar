@@ -11,9 +11,10 @@
 |
 */
 
-Route::get('/', 'MainController@welcome');
+Route::get('/', 'MainController@search');
 Route::get('/about', 'MainController@about');
 Route::get('/statistics', 'MainController@statistics');
+Route::get('/venetica', 'MainController@venetica');
 
 Route::get('/lastSearch', 'MainController@lastSearch');
 Route::post('/countResult', 'MainController@searchCount');
@@ -22,17 +23,22 @@ Route::post('/search', 'MainController@searchPost');
 Route::post('/filters', 'MainController@filters');
 Route::post('/details/{resultType}', 'MainController@details');
 Route::post('/smalldetails/{resultType}', 'MainController@smalldetails');
+Route::post('/europeana', 'MainController@europeana');
+Route::post('/europeanaMore', 'MainController@europeanaMore');
+Route::post('/venetica/apiquery', 'MainController@veneticaApiquery');
 Route::post('/refs', 'MainController@refs');
 Route::get('/author/publications/csv/{aid}', 'MainController@authorPublicationCSV');
 Route::get('/{resultType}/{type}/csv/{mid}', 'MainController@citationsCSV');
 
+Route::post('/suggester', 'MainController@suggester');
+
 Route::post('/logaction', 'MainController@logaction');
-Route::group(['middleware' => 'auth'], function () {
+#Route::group(['middleware' => 'auth'], function () {
 
 	Route::get('/search', 'MainController@search');
 	Route::get('/results', 'MainController@results');
 	
-});
+#});
 
 // Authentication routes...
 Route::get('auth/login', 'Auth\AuthController@getLogin');

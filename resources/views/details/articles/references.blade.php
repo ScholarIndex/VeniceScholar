@@ -3,21 +3,22 @@
 	<input class="referenceinput" placeholder="Search in text of reference" />
 </div>
 <div class="detailslines">
-	<table>
+	<table class="references">
 		<tbody>
 			<tr>
-				<th>Text <i class="fa fa-sort s-alpha"></i></th>
+	                        <th>Page <i class="fa fa-sort s-num default"></i></th>
+	                        <th>Text <i class="fa fa-sort s-alpha"></i></th>
 				<th>Links</th>
 				<th>Typology <i class="fa fa-sort s-alpha"></i></th>
-				<th>Page <i class="fa fa-sort s-num"></i></th>
 			</tr>
 		</tbody>
 		<tbody class"lines">
 			@foreach($o->cited as $type => $lines)
 				@foreach($lines as $l)
 					@foreach($l->incoming_references as $ir)
-						<tr>
-							<td>{{$ir->reference_string}}</td>
+						<tr class="ref">
+							<td>{{$ir->start_img_number}}</td>
+							<td class="content">{{$ir->reference_string}}</td>
 							<td>
 								@if(isset($l->author[0]))
 									<a href="#details={{$l->author[0]->id}}&rT=authors&type=publications&refcat=&refid=" class="vscholar_lnk">Author</a>&nbsp;
@@ -30,11 +31,11 @@
 								@endif
 							</td>
 							<td>{{ucfirst($type)}}</td>
-							<td>{{$ir->start_img_number}}</td>
 						</tr>
 					@endforeach
 				@endforeach
 			@endforeach
 		</tbody>
+		
 	</table>
 </div>

@@ -25,7 +25,7 @@ class AuthController extends Controller
 
 
     protected $username = 'login';
-    protected $redirectPath = '/';
+    protected $redirectPath = '/search';
 
 
     /**

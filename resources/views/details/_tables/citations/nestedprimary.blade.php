@@ -27,7 +27,7 @@
 			<tr class="oddeven">
 				<td>{{$v->label}}</td>
 				<td><a href="#" class="show_refs" data-type="{{$resultType}}" data-id="{{$oid}}" data-reftype="{{$type}}" data-refcat="{{$cat}}" data-refid="{{$v->id}}">Show reference{{count($v->incoming_references)>1?'s':''}} ({{count($v->incoming_references)}})</a></td>
-				<td><a href="#details={{$v->id}}&rT=primary_sources&type=citing&refcat=&refid=" class="vscholar_lnk">VScholar</a></td>
+				<td><a href="#details={{$v->id}}&rT=primary_sources&type=citing&refcat=&refid=" target="_blank" class="vscholar_lnk">VScholar</a></td>
 				<td></td>
 				<td></td>
 				<td></td>

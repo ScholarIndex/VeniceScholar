@@ -89,8 +89,14 @@ var SEARCH = {
             var code = e.keyCode || e.which;
              if(code == 13) { //Enter keycode
                    document.location = "/results#search="+encodeURIComponent($(this).val())+"&ns="+SEARCH.cS+"&p="+SEARCH.p;
+             }else{
+             	SEARCH.suggester();
              }
         });
+        
+        
+        
+        
         $(document).on('click', '.advancedsearch .closebutton', function(){
             $('.mainsearch').removeClass('adv_open');
         });
@@ -110,6 +116,12 @@ var SEARCH = {
         $(document).on('click', '.result.authors',                              function(e){	SEARCH.openDetails('authors',         'publications',             $(this).attr('data-id'))});
         $(document).on('click', '.result.authors .shortdetails',                function(e){ e.preventDefault(); e.stopPropagation();	SEARCH.openSmallDetails('authors',         'publications',             $(this).closest('.result').attr('data-id'))});
 
+		$(document).on('click', '.europeanaBtn',                				function(e){ e.preventDefault(); e.stopPropagation();	SEARCH.openEuropeana($(this).attr('data-rT'), $(this).attr('data-type'), $(this).attr('data-id'))});
+		$(document).on('click', '.europeanazone .fa-times',                     function(){	
+			SEARCH.openDetails(SEARCH.params.rT, SEARCH.params.type, SEARCH.params.europeana);
+		});
+
+		
         $(document).on('click', '.smalldetailszone .citationslink',                              function(){	SEARCH.openDetails('authors',         'cited',             $(this).attr('data-id'))});
         $(document).on('click', '.smalldetailszone .fa-arrows-alt',                              function(){	SEARCH.openDetails('authors',         'publications',             $(this).attr('data-id'))});
         $(document).on('click', '.smalldetailszone .fa-times',                              function(){	SEARCH.setHashSearch();});
@@ -123,27 +135,54 @@ var SEARCH = {
         $(document).on('click', '.result.references .subtitle .article',         function(){SEARCH.openDetails('articles',         'references',                 $(this).attr('data-id'));});
         $(document).on('click', '.result.primary_sources',                         function(){SEARCH.openDetails('primary_sources','citing',                     $(this).attr('data-id'));});
         $(document).on('click', 'li.rcat',                                         function(){SEARCH.openDetails($(this).attr('data-rt'),         $(this).attr('data-cat'),     $(this).closest('ul').attr('data-id') );});
+
+		$(document).on('click', 'rect.citing_h',                                  function(){SEARCH.openDetails($(this).closest('.chart').attr('data-rt'),         'citing',    $(this).closest('.chart').attr('data-id') );});
+        $(document).on('click', 'rect.cited_h',                                   function(){SEARCH.openDetails($(this).closest('.chart').attr('data-rt'),         'cited',     $(this).closest('.chart').attr('data-id') );});
+        
+
         $(document).on('click', '.show_refs',                                     function(e){e.preventDefault();e.stopPropagation();SEARCH.openDetails($(this).attr('data-type'),$(this).attr('data-reftype'),$(this).attr('data-id'),    $(this).attr('data-refcat'),$(this).attr('data-refid')); });
         $(document).on('click', '.refpanel>.fa-times', function(){
             SEARCH.openDetails(SEARCH.params.rT, SEARCH.params.type, SEARCH.params.details);
         });
+
+
+		/*if($('tbody.lines').length > 0){
+			$('tbody.lines').each(function(){
+				tbody = $(this);
+				if(tbody.find('tr').length > 10){ 
+					tbody.find('tr:nth-child(n+11)').hide();
+					tbody.next('.showall').show();
+					tbody.next('.showall').click(function(){
+						tbody.find('tr').show();
+						$(this).remove();
+					});
+				}
+			});
+		}*/
 
         $(document).on('click', '.nestedps tr.openable', function(){
         	$(this).closest('tbody').hide();
         	$('.nestedps[data-level="'+$(this).attr('data-relatedlevel')+'"]').show();
         });
 
-        $(document).on('click', '.nestedps .fa-chevron-up', function(){
+        $(document).on('click', '.nestedps span.up', function(){
         	$(this).closest('tbody').hide();
         	$('.nestedps[data-level="'+$(this).attr('data-relatedlevel')+'"]').show();
         });
+
+	$(document).on('click', 'tr.donthide', function(){
+		$(this).closest('tbody').removeClass('books articles references');
+		$(this).remove();
+
+	});
+
 
         $(document).on('click', '.detailslines i', function(){
             var sortIcon = $(this);
             var tbody = $(this).closest('tbody').next('tbody');
             SEARCH.detailsSort(tbody, sortIcon);
         });
-        $(document).on('click', '.detailszone>.fa-times', function(){
+        $(document).on('click', '.detailszone>.close', function(){
             SEARCH.setHashSearch();
         });
         $(document).on('click', '.sub', function(e){
@@ -205,6 +244,10 @@ var SEARCH = {
 
         $(document).on('keyup', '.searchreference input', SEARCH.refsearch);
         $(document).on('keyup', '.searchinreference input', SEARCH.inrefsearch);
+		
+		
+		
+		$(document).on('click', '.europeanazone .loadMore', SEARCH.loadMoreEuropeana);
 
         $(window).bind( 'hashchange', SEARCH.hashchange);
         SEARCH.hashchange();
@@ -214,12 +257,20 @@ var SEARCH = {
 	    refid = typeof refid !== 'undefined' ? refid : '';
         SEARCH.setHashDetails(resultType, type, id, refcat, refid);
     },
-    openSmallDetails : function(resultType, type, id, refcat, refid){
+	
+	openSmallDetails : function(resultType, type, id, refcat, refid){
     	refcat = typeof refcat !== 'undefined' ? refcat : '';
 	    refid = typeof refid !== 'undefined' ? refid : '';
         SEARCH.setHashSmallDetails(resultType, type, id, refcat, refid);
         
     },
+
+    openEuropeana : function(resultType, type, id, refcat, refid){
+    	refcat = typeof refcat !== 'undefined' ? refcat : '';
+	    refid = typeof refid !== 'undefined' ? refid : '';		
+        SEARCH.setHashEuropeana(resultType, type, id, refcat, refid);      
+    },
+
 
     displayDetails : function(resultType, type, id, refcat, refid){
         $.ajax({
@@ -231,7 +282,8 @@ var SEARCH = {
                },
             dataType: "html",
             beforeSend: function(){
-            	$('.fa.fa-pulse').fadeIn();
+            	$('.globalSpinner').fadeIn();
+				$('.europeanazone').animate({'margin-right': -400});
             },
             success: function (data) {
                 $('.detailszone').html(data);
@@ -255,7 +307,7 @@ var SEARCH = {
     						$('#helpwrapper').attr('data-step', 'author_details_citations');
                 	}
                 }
-                $('.fa.fa-pulse').fadeOut();
+                $('.globalSpinner').fadeOut();
             }, 
             error : function(xhr, ajaxOptions, thrownError){
             	document.location = '/errors/'+xhr.status;	
@@ -279,14 +331,14 @@ var SEARCH = {
              },
           dataType: "html",
           beforeSend: function(){
-          	$('.fa.fa-pulse').fadeIn();
+          	$('.globalSpinner').fadeIn();
           },
           success: function (data) {
             $('.smalldetailszone').animate({'margin-right':-400});
               $('.refpanel').html(data);
               $('.refpanel').fadeIn();
               $('#helpwrapper').attr('data-step', 'references_panel');
-              $('.fa.fa-pulse').fadeOut();
+              $('.globalSpinner').fadeOut();
           }
        });
 
@@ -300,7 +352,7 @@ var SEARCH = {
                 'type': type
                },
             beforeSend : function(){
-            	$('.fa.fa-pulse').fadeIn();
+            	$('.globalSpinner').fadeIn();
             	$('.detailszone').fadeOut();
             },
             dataType: "html",
@@ -309,12 +361,70 @@ var SEARCH = {
                 $('.smalldetailszone').animate({'margin-right': 0});
               	if(resultType=='authors' && type == 'publications')    SEARCH.loadDetailsChart(id,'small');
               	$('#helpwrapper').attr('data-step', 'author_small_details');
-				$('.fa.fa-pulse').fadeOut();
+				$('.globalSpinner').fadeOut();
             }, 
             error : function(xhr, ajaxOptions, thrownError){
             	document.location = '/errors/'+xhr.status;	
             }
          });
+    },
+    displayEuropeana : function(resultType, type, id, refcat, refid){
+        $.ajax({
+            url: "/europeana",
+            type: "POST",
+            data: {
+                'id': id,
+                'resultType': resultType
+               },
+            beforeSend : function(){
+				$('.europeanazone').addClass('loading');
+				$('.europeanazone').animate({'margin-right': 0});
+			},
+            dataType: "html",
+            success: function (data) {
+                $('.europeanazone>.europeanaResults').html(data);
+                $('.europeanazone').removeClass('loading');
+                
+                
+              	$('#helpwrapper').attr('data-step', 'europeana');
+            }, 
+            error : function(xhr, ajaxOptions, thrownError){
+            	document.location = '/errors/'+xhr.status;	
+            }
+         });
+    },	
+	
+	loadMoreEuropeana : function(){
+		var btn = $(this);
+		$.ajax({
+            url: "/europeanaMore",
+            type: "POST",
+            data: {
+                'q': $(this).attr('data-query'),
+                'cursor': $(this).attr('data-cursor')
+               },
+            beforeSend : function(){
+					btn.remove();
+			},
+            dataType: "html",
+            success: function (data) {
+                $('.europeanazone>.europeanaResults>ul').append(data);                
+            }, 
+            error : function(xhr, ajaxOptions, thrownError){
+            	document.location = '/errors/'+xhr.status;	
+            }
+         });	
+
+	
+		
+	},
+	
+	
+	
+    movePublicationTo: function (e){
+    	$('.detailszone').scrollTo($('.detailszone tr[data-id="'+e.id+'"]'), 200, {offset:{top:-50}});
+    	$('.detailszone tr').removeClass("highlight");
+    	$('.detailszone tr[data-id="'+e.id+'"]').addClass("highlight");
     },
     loadDetailsChart : function(authorId, size){
 
@@ -369,8 +479,13 @@ var SEARCH = {
             dots = nodes.append('circle')
                 .attr('class', function(d){
                     return 'dot '+d.type;
-                })      .on('mouseover', tip.show)
-              .on('mouseout', tip.hide);
+                })
+                .attr('data-id', function(d){
+                    return d.id;
+                })
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide)
+              .on('click', SEARCH.movePublicationTo);
             nodes.on('mouseover', function(d) {
               d3.select(this.firstChild).attr('r', (size=='small')?7:11);
             })
@@ -693,7 +808,7 @@ var SEARCH = {
             },
             beforeSend : function(){
                 $('.results').html("");
-            	$('.fa.fa-pulse').fadeIn();
+            	$('.globalSpinner').fadeIn();
             },
 
             dataType: "html",
@@ -704,7 +819,7 @@ var SEARCH = {
                 SEARCH.loadGraph();
                 SEARCH.searching = false;
                 $('.headfield i.fa').toggleClass('fa-search fa-spinner fa-spin');
-                $('.fa.fa-pulse').fadeOut();
+                $('.globalSpinner').fadeOut();
             }
         });
     },
@@ -763,6 +878,10 @@ var SEARCH = {
         if(hash.startsWith('smalldetails')){
             SEARCH.displaySmallDetails(params.rT, params.type, params.smalldetails, params.refcat, params.refid);
         }
+        if(hash.startsWith('europeana')){
+			SEARCH.displayDetails(params.rT, params.type,params.europeana, params.refcat, params.refid);
+            SEARCH.displayEuropeana(params.rT, params.type,params.europeana, params.refcat, params.refid);
+        }		
         if(hash.startsWith('details')){
             if(SEARCH.lastParams !== null && params.rT == SEARCH.lastParams.rT && params.type == SEARCH.lastParams.type && params.details == SEARCH.lastParams.details && params.refcat !== "" && params.refid !== "" ){
               SEARCH.displayRefs(params.rT, params.type,params.details, params.refcat, params.refid);
@@ -780,6 +899,9 @@ var SEARCH = {
     setHashSmallDetails : function(resultType, type, id, refcat, refid){
         document.location.hash = "smalldetails="+id+"&rT="+resultType+"&type="+type+"&refcat="+refcat+"&refid="+refid;
     },
+	setHashEuropeana : function(resultType, type, id, refcat, refid){
+        document.location.hash = "europeana="+id+"&rT="+resultType+"&type="+type+"&refcat="+refcat+"&refid="+refid; 
+    },
     deserialize : function(serializedString) {
         var o = {};
         serializedString = serializedString.replace(/\+/g, '%20');
@@ -796,11 +918,11 @@ var SEARCH = {
     refsearch : function(){
 		var q = $('.searchreference input').val();
 		if(q.length == 0){
-			$('.detailslines tr').show();
+			$('.detailslines tr.ref').show();
 			return;
 		}else{
-			$('.detailslines tr').hide();
-			$('.detailslines tr td:first-child:contains("'+q+'")').closest('tr').show();
+			$('.detailslines tr.ref').hide();
+			$('.detailslines tr.ref td.content:contains("'+q+'")').closest('tr').show();
 		}
 	},
     inrefsearch : function(){
@@ -813,6 +935,499 @@ var SEARCH = {
 			$('.refpanel p:contains("'+q+'")').show();
 		}
 	},
+	
+	xhrsugg : null,
+	suggester : function(){
+
+        if(SEARCH.xhrsugg && SEARCH.xhrsugg.readystate != 4){
+            SEARCH.xhrsugg.abort();
+        }
+
+		SEARCH.xhrsugg = $.ajax({
+            url: "/suggester",
+            type: "POST",
+            data: {
+                'q': $('input.searchinput').val()
+            },
+            beforeSend : function(){
+                $('.suggestlist').html("");
+            },
+
+            dataType: "html",
+            success: function (data) {
+                $('.suggestlist').append(data);
+            }
+        });
+		
+		
+	}
+	
+	
+	
 
 };
+
+var VENETICA = {
+	
+	authorsDict : {},
+	keywordsDict : {},
+	seeds : {},
+	filters : {},
+	kwResults : [],
+	kwCursor : null,
+	kwQuery: null,
+	results : [],
+	ajaxQueries : [],
+	
+	init : function(){
+			// Fill the dropdown menu
+			VENETICA.loadSeeds();
+		
+			// Change view type (card/list)
+			$(document).on('click','.view',function(){
+				$('#wrapper').toggleClass('cardView');
+				$('#wrapper').toggleClass('listView');
+			});
+			
+			// Open a result in a new tab
+			$(document).on('click', 'table.rs tbody tr', function(){
+				window.open($(this).attr('data-href'), '_blank');
+			});
+			
+			// Open/close a dropdown filter zone
+			$(document).on('click', '.filterZone .title', function(){
+				 $(this).closest('.filterZone').find('.dropdown').fadeToggle(100);
+				 $(this).closest('.filterZone').find('.dropdown').find('input').focus();
+			});
+			
+			// Search in dropdown filter zone
+			$(document).on('keyup', '.filterZone input', function(){VENETICA.refreshDropdown($(this).closest('.filterZone'))});
+			
+			// Go to letter in dropdown filter zone
+			$(document).on('click', 'ul.letters li.active', function(){
+				$(this).closest('.dropdown').find('.rsList').scrollTo('.group[data-id="'+$(this).text()+'"]', 100); 
+			});
+			
+			// Click on filter dropdown list to add a new filter
+			$(document).on('click', '.rsList li.flt', function(){
+				var id = $(this).attr('data-id')
+				if( ! VENETICA.filters.hasOwnProperty(id)){
+					if(Object.keys(VENETICA.filters).length == 10){
+						alert('You can choose a maximum of 10 filters');
+						return;
+					}
+					VENETICA.filters[id] = VENETICA.seeds[id];
+					VENETICA.filters[id].active = false;
+					if($(this).attr('data-type') == 'author') VENETICA.filters[id].results = [];
+					
+					if($(this).attr('data-type') == 'keyword') VENETICA.kwResults = [];
+					VENETICA.refreshFilters();
+				}
+				$(this).closest('.filterZone').find('.dropdown').fadeToggle(100);
+			});
+			
+			// Delete a filter
+			$(document).on('click', '.tags div b', function(){
+				delete VENETICA.filters[$(this).closest('div').attr('data-id')];
+				if($(this).closest('div').attr('data-type')=='keyword') VENETICA.kwResults = [];
+				VENETICA.refreshFilters();
+			});
+
+			// Highlight/Unhighlight a filter
+			$(document).on('click', '.tags div span', function(){
+				if(VENETICA.filters[$(this).closest('div').attr('data-id')].active){
+					VENETICA.filters[$(this).closest('div').attr('data-id')].active = false;
+				}else{
+						$.each(VENETICA.filters, function(id, f){
+							VENETICA.filters[id].active = false;
+						});
+						VENETICA.filters[$(this).closest('div').attr('data-id')].active = true;
+				}
+				VENETICA.refreshFilters();
+			});
+			
+			// Load more results
+			$(document).on('click', '.lazyMore', VENETICA.loadMore);
+			$('div.results').on('scroll', function() {
+				if($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight) {
+					VENETICA.loadMore();
+				}
+			})
+
+			// Change sorting key (column header click)
+			$(document).on('click', 'th', function(){
+				var no = $(this).find('i').hasClass('fa-sort');
+				var asc = $(this).find('i').hasClass('fa-sort-asc');
+				var desc = $(this).find('i').hasClass('fa-sort-desc');
+				if(no){
+					$('th i').removeClass('fa-sort-asc').removeClass('fa-sort-desc').addClass('fa-sort');
+					$(this).find('i').removeClass('fa-sort').addClass('fa-sort-asc');
+				}
+				if(asc){
+					$(this).find('i').removeClass('fa-sort-asc').addClass('fa-sort-desc');
+				}
+				if(desc){
+					$(this).find('i').removeClass('fa-sort-desc').addClass('fa-sort');
+				}	
+				VENETICA.displayResults();
+			});
+			
+	},
+	
+	refreshDropdown : function(fz){
+		var v = fz.find('input').val();
+		fz.find('.rsList .group').hide();
+		fz.find('.rsList li').hide();
+		fz.find('ul.letters li').removeClass('active');
+		fz.find('.rsList li:contains('+v+')').each(function(){
+			var li = $(this);
+			var gp = li.closest('.group');
+			var gph = gp.find('li.header');
+			li.show();
+			gp.show();
+			gph.show();
+			fz.find('ul.letters li.'+gph.text()).addClass('active');
+		});				
+	},
+	
+	refreshFilters : function(){
+		$('div.tags').html('');
+
+		$.each(VENETICA.filters, function(id, f){
+			$('div.tags').append('<div data-type="'+f.type+'" data-id="'+id+'" class="'+(f.active?'active':'')+'"><span>'+f.label+'</span><b>×</b></div>');
+		});
+		
+		$('.filters .head span').html('('+Object.keys(VENETICA.filters).length+'/10)');
+		
+		VENETICA.loadResults();
+		
+	},
+	
+	loadSeeds : function(){
+		var seeds = [];
+		$.ajax({
+            url: "/venetica/apiquery",
+            type: "POST",
+			async: false,
+			data : {
+				url : "/europeana/venetica",
+			},
+            dataType: "json",
+	        success: function (data){
+				seeds = data.seeds;
+            }
+         })
+		 
+		
+		$.each(seeds, function(id, s){
+			var firstLetter = s.label[0].toUpperCase();
+			VENETICA.seeds[s.id] = s;
+			if(s.type == "author"){
+				
+				if( ! VENETICA.authorsDict.hasOwnProperty(firstLetter)){
+					VENETICA.authorsDict[firstLetter] = [];
+				}
+				VENETICA.authorsDict[firstLetter].push(s);
+			}
+			if(s.type == "keyword"){
+				
+				if( ! VENETICA.keywordsDict.hasOwnProperty(firstLetter)){
+					VENETICA.keywordsDict[firstLetter] = [];
+				}
+				VENETICA.keywordsDict[firstLetter].push(s);
+			}
+			
+			if(s.default){
+				VENETICA.filters[s.id] = VENETICA.seeds[s.id];
+				VENETICA.filters[s.id].active = false;
+				if(s.type == 'author') VENETICA.filters[s.id].results = [];
+				if(s.type == 'keyword') VENETICA.kwResults = [];				
+			}
+			
+		});
+		
+		
+		var tmp = {};
+		Object.keys(VENETICA.authorsDict).sort().forEach(function(key) {	tmp[key] = VENETICA.authorsDict[key];	});
+		VENETICA.authorsDict = tmp;
+
+		var tmp = {};
+		Object.keys(VENETICA.keywordsDict).sort().forEach(function(key) {	tmp[key] = VENETICA.keywordsDict[key];	});
+		VENETICA.keywordsDict = tmp;
+
+		
+		$('.filterZone.authors .rsList').html('');
+		$.each(VENETICA.authorsDict, function(letter, arr){
+			var group = $('<div class="group" data-id="'+letter+'"></div>');
+			group.append($('<li class="header">'+letter+'</li>'));
+			$.each(arr, function(id, s){
+				group.append($('<li class="flt" data-type="author" data-id="'+s.id+'">'+s.label+'</li>'));
+			});
+			$('.filterZone.authors .rsList').append(group);			
+		});
+		
+
+		$('.filterZone.keywords .rsList').html('');
+		$.each(VENETICA.keywordsDict, function(letter, arr){
+			var group = $('<div class="group" data-id="'+letter+'"></div>');
+			group.append($('<li class="header">'+letter+'</li>'));
+			$.each(arr, function(id, s){
+				group.append($('<li class="flt" data-type="keyword" data-id="'+s.id+'">'+s.label+'</li>'));
+			});
+			$('.filterZone.keywords .rsList').append(group);			
+		});
+		
+		$('.filterZone').each( function(){	VENETICA.refreshDropdown($(this))});		
+		
+		VENETICA.refreshFilters();
+		
+	}, 
+	
+	loadResults : function(){
+	
+		if(VENETICA.kwResults.length == 0){
+			VENETICA.queryKeywords();
+		}
+		
+		$.each(VENETICA.filters, function(id, s){
+			if(s.type == 'author'){
+				if(s.results.length == 0){
+					VENETICA.queryAuthor(s);
+				}
+			}
+		});
+		
+		
+		VENETICA.displayResults();
+	},
+	
+	queryAuthor : function(s){
+		
+		VENETICA.ajaxQueries.push ( $.ajax({
+            url: "/venetica/apiquery",
+            type: "POST",
+			data : {
+				url : "/europeana/suggest?author_id="+s.id,
+			},
+            dataType: "json",
+			beforeSend : function() { $('.lazyMore').addClass('loading');},
+            success: function (data){
+				VENETICA.processAuthorResults(s.id, data);
+            }
+         }));
+	}, 
+	
+	queryMoreAuthor : function(s){
+		if(VENETICA.filters[s.id].authorCursor == null) return;
+		var params = [];
+		params.push('query='+encodeURIComponent(VENETICA.filters[s.id].authorQuery));
+		params.push('cursor='+encodeURIComponent(VENETICA.filters[s.id].authorCursor));
+
+
+		VENETICA.ajaxQueries.push ( $.ajax({
+            url: "/venetica/apiquery",
+            type: "POST",
+			beforeSend : function() { $('.lazyMore').addClass('loading');},
+			data : {
+				url : "/europeana/suggest?"+params.join('&'),
+			},
+            dataType: "json",
+            success: function (data){
+				VENETICA.processAuthorResults(s.id, data);
+            }
+         }));		
+	},
+		
+	processAuthorResults : function(id, data){
+		VENETICA.filters[id].authorCursor = data.cursor;
+		VENETICA.filters[id].authorQuery = data.query;
+		$.each(data.results, function(i, rs){
+			rs.type = 'author';
+			rs.author_id = id;
+			rs.thumbnail = rs.thumbnail || '';
+			rs.title = rs.title || '';
+			rs.provider = rs.provider || '';
+			rs.year = rs.year || '';
+			rs.lang = rs.lang || '';
+			rs.licence = rs.licence || '';
+			VENETICA.filters[id].results.push(rs);
+		});
+		VENETICA.displayResults();		
+	},
+				
+	queryKeywords : function(){
+		var params=[];
+		$.each(VENETICA.filters, function(id, s){
+			if(s.type=="keyword") params.push("keyword="+s.label);
+		});
+		if(params.length == 0)
+			return;
+		
+		VENETICA.ajaxQueries.push ( $.ajax({
+            url: "/venetica/apiquery",
+            type: "POST",
+			beforeSend : function() { $('.lazyMore').addClass('loading');},
+			data : {
+				url : "/europeana/suggest?"+params.join('&'),
+			},
+            dataType: "json",
+            success: VENETICA.processKwResults
+		}));
+		
+	},
+
+	queryMoreKeywords : function(){
+		if(VENETICA.kwCursor == null) return;
+		
+		var params = [];
+		params.push('query='+encodeURIComponent(VENETICA.kwQuery));
+		params.push('cursor='+encodeURIComponent(VENETICA.kwCursor));
+		
+
+		VENETICA.ajaxQueries.push ( $.ajax({
+            url: "/venetica/apiquery",
+            type: "POST",
+			beforeSend : function() { $('.lazyMore').addClass('loading');},
+			data : {
+				url : "/europeana/suggest?"+params.join('&'),
+			},
+            dataType: "json",
+            success: VENETICA.processKwResults
+         }));		
+	},
+	
+	processKwResults : function(data){
+		VENETICA.kwCursor = data.cursor;
+		VENETICA.kwQuery = data.query;
+		$.each(data.results, function(i, rs){
+			rs.type = 'keyword';
+			rs.thumbnail = rs.thumbnail || '';
+			rs.title = rs.title || '';
+			rs.provider = rs.provider || '';
+			rs.year = rs.year || '';
+			rs.lang = rs.lang || '';
+			rs.licence = rs.licence || '';
+			VENETICA.kwResults.push(rs);
+		});
+		VENETICA.displayResults();		
+	},
+	
+	loadMore : function(){
+		if ( $('.lazyMore').hasClass('loading')) return;
+
+		var kwLoaded = false;
+		
+		$.each(VENETICA.filters, function(id, f){
+			if(f.type == 'author'){
+				VENETICA.queryMoreAuthor(f);
+			}
+			if(kwLoaded == false && f.type=='keyword'){
+				VENETICA.queryMoreKeywords();
+				kwLoaded = true;
+			}
+		});		
+	},
+	
+	mergeResults : function(){
+		var kwMerged = false;
+		VENETICA.results = [];
+		$.each(VENETICA.filters, function(id, f){
+			if(f.type == 'author'){
+				VENETICA.results = $.merge(VENETICA.results, f.results);
+			}
+			if(kwMerged == false && f.type=='keyword'){
+				VENETICA.results = $.merge(VENETICA.results, VENETICA.kwResults);
+				kwMerged = true;
+			}
+		});
+	},
+	
+	sortResults : function(){
+		var hasTagActive = $('.tags div.active').length > 0;
+		var tagActive = $('.tags div.active').attr('data-id');
+		var tagActiveType = $('.tags div.active').attr('data-type');
+		var hasAscSort = $('th i.fa-sort-asc').length > 0;
+		var hasDescSort = $('th i.fa-sort-desc').length > 0;
+		var sortKey = $('th i.fa-sort-asc,th i.fa-sort-desc').attr('data-key');
+
+		VENETICA.results.sort(function(obj1, obj2) {
+			if(hasTagActive){
+				if(tagActiveType == 'author'){
+					if(obj1.type == 'author' && obj1.author_id == tagActive && ! (obj2.type == 'author' && obj2.author_id == tagActive)) return -1;
+					if(obj2.type == 'author' && obj2.author_id == tagActive && ! (obj1.type == 'author' && obj1.author_id == tagActive)) return 1;
+				}
+				
+				if(tagActiveType == 'keyword'){
+					if(obj1.type == 'keyword' && obj2.type != 'keyword') return -1;
+					if(obj2.type == 'keyword' && obj1.type != 'keyword') return 1;
+				}
+			}
+			
+			if( hasAscSort || hasDescSort ){
+				var v1 = obj1[sortKey].toLowerCase();
+				var v2 = obj2[sortKey].toLowerCase();
+				if(sortKey == 'year' && hasAscSort){
+					if(v1 == '') v1=999999;
+					if(v2 == '') v2=999999;
+				}
+				if(sortKey == 'year' && hasDescSort){
+					if(v1 == '') v1=-999999;
+					if(v2 == '') v2=-999999;
+				}				
+			}
+			if( hasAscSort ){
+				if(v1 != v2) return (v1 > v2) - (v1 < v2);
+			}
+
+			if( hasDescSort ){
+				if(v1 != v2) return (v2 > v1) - (v2 < v1);
+			}
+
+			
+			return 1;
+		});
+	},
+	
+	displayResults : function(){
+		VENETICA.mergeResults();
+		VENETICA.sortResults();
+		
+		var kwHighlight = $('.tags div.active[data-type="keyword"]').length > 0;
+		var authHighlight = $('.tags div.active[data-type="author"]').length > 0 ? $('.tags div.active[data-type="author"]').attr('data-id') : '';
+		
+		$('table.rs tbody').html('');
+		$.each(VENETICA.results, function (i,rs){ 
+			var tr = $('<tr data-href="'+rs.europeana_url+'"></tr>');
+			if(kwHighlight && rs.type=="keyword") tr.addClass('active');
+			if(authHighlight != '' && rs.type=="author" && rs.author_id == authHighlight) tr.addClass('active');
+			tr.append('<td class="thumb"><img src="'+rs.thumbnail+'" /></td>');
+			tr.append('<td class="title"><span class="listTitle">'+rs.title+'</span><span class="cardTitle">'+truncate(rs.title, 35)+'</span></td>');
+			tr.append('<td class="provider">'+rs.provider+'</td>');
+			tr.append('<td class="year">'+rs.year+'</td>');
+			tr.append('<td class="lang">'+rs.lang+'</td>');
+			if(rs.licence.indexOf('creativecommons') == -1)
+				tr.append('<td class="licence"><i class="fa fa-lock"></i></td>');
+			else
+				tr.append('<td class="licence"><i class="fa fa-unlock"></i></td>');
+			$('table.rs tbody').append(tr);			
+		});
+		
+		VENETICA.updateLoadMoreButton();
+	},
+	
+	updateLoadMoreButton : function(){
+		var hasRunning = false;
+		$.each(VENETICA.ajaxQueries, function (i, a){
+			if(a.readyState == 1)
+				hasRunning = true;
+		});
+		if( ! hasRunning){
+			VENETICA.ajaxQueries = [];
+			$('.lazyMore').removeClass('loading');
+		}
+	}
+	
+	
+}
+
 $(document).ready(LBC.init);

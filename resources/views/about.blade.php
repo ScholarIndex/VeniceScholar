@@ -1,39 +1,16 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>The project</title>
+@extends('layout')
 
-        <link href="https://fonts.googleapis.com/css?family=Lato:100" rel="stylesheet" type="text/css">
-
-        <style>
-            html, body {
-                height: 100%; background: #0A3B4C; color: white;
-            }
-
-            body {
-                margin: 0;
-                padding: 0;
-                width: 60%;
-                font-weight: 100;
-                font-family: Arial;
-                line-height: 1.5em;
-				padding: 30px;
-            }
+@section('content')
 
 
-            .title {
-                font-size: 96px;
-            }
-            
-            a { color: white; }
-            a:hover { color: #ddd; }
-        </style>
-    </head>
-    <body>
+
+
+
+
             	<h1>About</h1>
-     <p>The Linked Books Catalogue is part of the Linked Books project conducted at the École Polytechnique Fédérale de Lausanne, Switzerland. The project’s goal is to index the literature on the history of Venice through citations to both primary and secondary sources.<br /><br />The Venice Scholar is the citation index of the literature on the history of Venice, where users can follow the citations links extracted from a growing database of scholarly literature.&nbsp;<br /><br /></p>
-
-<strong>Partners of the Project</strong>
+	<p>The Venice Scholar was developed in the context of the <a href="https://dhlab.epfl.ch/page-127959-en.html">Linked Books project</a> led by the Digital Humanities Laboratory of the École Polytechnique Fédérale de Lausanne, Switzerland. The project’s goal is to index the literature on the history of Venice through citations to both primary and secondary sources.</p>
+	<p>The Venice Scholar is the first working instance of the <a href="http://www.scholarindex.eu/">Scholar Index</a>. It is the citation index of the literature on the history of Venice, where users can interactively explore publications by following the citations links extracted from a growing database of scholarly literature.</p>
+	<strong>Partners of the Project</strong>
 <ul>
  	<li><a href="http://www.unive.it/pag/9756/">Ca’Foscari University Library System</a> and the <a href="http://www.unive.it/pag/4756/">Humanities Library of Ca' Foscari University</a>, Venice</li>
  	<li><a href="http://marciana.venezia.sbn.it/">Biblioteca Nazionale Marciana</a>, Venice (National Library of St Mark)</li>
@@ -60,6 +37,12 @@
 	<li>Frédéric Kaplan (EPFL)</li>
 	<li>Massimo Franceschet (University of Udine)</li>	
 </ul>
-&nbsp;
-    </body>
-</html>
+
+<strong>Funders</strong>
+<ul>
+	<li>The Venice Scholar/Scholar Index was developed thanks to a grant by the Swiss National Science Foundation (grant <a href="http://p3.snf.ch/project-159961">n. 159961</a>).</li>
+	<li>The development of the <em>Venetica</em> section of the Venice Scholar and of the Europeana sidebar was made possible by a <a href="https://pro.europeana.eu/services/facilitating-innovation/grants-programme">Europeana Research Grant</a>.</li>
+</ul>
+
+
+@endsection

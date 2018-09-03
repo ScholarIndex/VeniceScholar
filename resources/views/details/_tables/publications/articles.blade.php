@@ -7,15 +7,19 @@
 		<th>Journal <i class="fa fa-sort s-alpha"></i></th>
 		<th>Year <i class="fa fa-sort s-num s-rev default"></i></th>
 	</tr>
-	<tbody class="lines">
+	<tbody class="lines articles">
 		@foreach($lines as $l)
-			<tr>
+			<tr data-id="{{$l->id}}">
 				<td>{{$l->title}}</td>
-				<td><a href="#details={{$l->id}}&rT=articles&type=references&refcat=&refid=" class="vscholar_lnk">VScholar</a> | <a href="http://{{ Config::get('vs.LBC_HOST') }}/article/overview/{{$l->id}}">Catalog</a></td>
+				<td><a href="#details={{$l->id}}&rT=articles&type=references&refcat=&refid=" class="vscholar_lnk" target="_blank" >VScholar</a> | <a href="http://{{ Config::get('vs.LBC_HOST') }}/article/overview/{{$l->id}}" target="_blank" >Library</a></td>
 				<td>{{$l->author[0]->name}}</td>
 				<td>{{MongoHelper::journalName($l->bid)}}</td>
 				<td>{{$l->year}}</td>
 			</tr>
 		@endforeach
+                @if(count($lines)>10)
+                       <tr class="donthide"><td colspan="5">Show {{count($lines)-10}} more entries</td></tr>
+                @endif
 	</tbody>
+	
 @endif

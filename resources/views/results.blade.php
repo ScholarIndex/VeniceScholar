@@ -41,4 +41,10 @@
 </div>
 <div class="detailszone"></div>
 <div class="smalldetailszone"></div>
+<div class="europeanazone loading">
+	<img src="/img/Bitmap@2x.png" class="logo" />
+	<i class="fa fa-times"></i>
+	<i class="fa fa-spinner fa-pulse fa-3x spinner"></i>
+	<div class="europeanaResults"></div>
+</div>
 @endsection

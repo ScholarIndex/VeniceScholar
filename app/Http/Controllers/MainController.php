@@ -25,38 +25,56 @@ use App\Reference;
 use App\VSHistory;
 use bheller\ImagesGenerator\ImagesGeneratorProvider;
 use Illuminate\Http\Request;
+use PiwikTracker;
 
-define('ROOT',  config('vs.JSROOT'));
+define('API_ROOT', env('API_ROOT'));
+define('SOLR_CORE', env('SOLR_CORE'));
+define('SOLR_HOST', env('SOLR_HOST'));
+define('SOLR_PORT', env('SOLR_PORT'));
+define('LBC_HOST', env('LBC_HOST'));
+define('ROOT',  env('JSROOT'));
 define('LRBB',  ROOT.'bibliodb_books');
 define('LRBA',  ROOT.'bibliodb_articles');
 define('LRBC',  ROOT.'bibliodb_contributions');
 define('LRBH',  ROOT.'bibliodb_authors');
 define('LRBV',  ROOT.'bibliodb_asve');
 define('LRR',   ROOT.'references');
-define('API_PORT', config('vs.API_PORT'));
-define('API_ROOT', config('vs.API_ROOT').API_PORT);
-define('SOLR_CORE', config('vs.SOLR_CORE'));
 
 class MainController extends Controller
 {
 		private $solrconnection = null;
-
-
+		private $piwikTracker = null;
+		
+		public function __construct(){
+			$key = env('MATOMO_APIKEY', '');
+			if($key !== ""){
+				$this->piwikTracker = new PiwikTracker($idSite = env('MATOMO_SITEID',-1), $apiUrl = env('MATOMO_URL',''));
+				$this->piwikTracker->setTokenAuth($key);
+			}
+		}
+		
 		public function api_call($qry){
 			$url = API_ROOT.$qry;
 			\Log::error($url);
+		
 		    $headers = get_headers($url);
 			$code = substr($headers[0], 9, 3);
+			
 			if($code < 400){
-				return json_decode(file_get_contents($url));
+				$r = json_decode(file_get_contents($url));
+			#	\Log::error(print_r($r,1));
+				return $r;
 			}else{
 				return false;
 			}
 		}
 
-        public function welcome()
-        {
-            return View::make('welcome', []);
+        public function welcome(){
+
+			if(!is_null($this->piwikTracker)){
+				$this->piwikTracker->doTrackPageView("Homepage");
+            }
+			return View::make('welcome', []);
         }
 
         public function results()
@@ -83,17 +101,20 @@ class MainController extends Controller
 
 		public function about()
 		{
-			return View::make('about');
+			$data = ['hasTopMenu' => 'hasTopMenu', 'about' => 'about', 'dataJs' => ''];
+			$this->piwikTracker->doTrackPageView("About");
+			return View::make('about', $data);
 		}
 	
 
 
 		public function statistics()
 		{
-			$data = ['hasTopMenu' => 'hasTopMenu', 'dataJs' => ''];
+			
+			$data = ['hasTopMenu' => 'hasTopMenu', 'statistics' => 'statistics', 'dataJs' => ''];
 
 			$data['stats'] = [];
-			if( ! $st = $this->api_call('/api/stats')){
+			if( ! $st = $this->api_call('/stats')){
 				abort(500);
 			}	
 
@@ -101,17 +122,35 @@ class MainController extends Controller
 				$data['stats'][$s->id] = $s;
 			}
 
-	
+			$this->piwikTracker->doTrackPageView("Statistics");
 			return View::make('statistics', $data);
 		
 		}
 
+		public function venetica()
+		{
+			$data = ['hasTopMenu' => 'hasTopMenu', 'venetica' => 'venetica', 'dataJs' => 'VENETICA'];
+
+			if(!is_null($this->piwikTracker)){
+				$this->piwikTracker->doTrackPageView("Venetica");
+			}	
+			return View::make('venetica', $data);
+		
+		}
+		
+		public function veneticaApiquery(Request $request){
+			if(!is_null($this->piwikTracker)){
+				$this->piwikTracker->doTrackPageView("VeneticaApiQuery");
+			}
+			print_r(file_get_contents(API_ROOT.$request->url));die();
+		}
+		
 		public function logaction(Request $request){
 			$a = new VSHistory;
 			foreach($request['params'] as $k => $v)
 				$a[$k] = json_encode($v);
 
-			$a['user'] = Auth::user()->id;
+#			$a['user'] = Auth::user()->id;
 			$a->save();
 			die();			
 			
@@ -123,10 +162,10 @@ class MainController extends Controller
 		public function connectSolr(){
 	
 			if($this->solrconnection == null){
-				define('SOLR_SERVER_HOSTNAME', 'dhlabsrv5.epfl.ch');
+				define('SOLR_SERVER_HOSTNAME', SOLR_HOST);
 				define('SOLR_SECURE', true);
 				define('SOLR_PATH', SOLR_CORE);
-				define('SOLR_SERVER_PORT', 8983);
+				define('SOLR_SERVER_PORT', SOLR_PORT);
 				define('SOLR_SERVER_USERNAME', '');
 				define('SOLR_SERVER_PASSWORD', '');
 				define('SOLR_SERVER_TIMEOUT', 10);
@@ -171,7 +210,7 @@ class MainController extends Controller
 				}
 				$qry = implode(' OR ', $ORs);
 	
-				if(count($filtrs)>0){
+				if(is_array($filtrs) && count($filtrs)>0){
 					foreach($filtrs as $field => $keys){
 						switch($field){
 							case 'year':
@@ -226,7 +265,7 @@ class MainController extends Controller
 					if(count($flds)){
 						$fORs = array();
 						foreach($flds as $f)
-							$fORs[] = $f.":(".$q."*)";	
+							$fORs[] = $f.":(".$q.")";	
 						
 						$ORs[] = "( ns:".$ns." AND (".implode(' OR ', $fORs).") )";
 					}
@@ -299,7 +338,7 @@ class MainController extends Controller
 					if(count($flds)){
 						$fORs = array();
 						foreach($flds as $f)
-							$fORs[] = $f.":(".$q."*)";	
+							$fORs[] = $f.":(".$q.")";	
 						
 						$ORs[] = "( ns:".$ns." AND (".implode(' OR ', $fORs).") )";
 					}
@@ -327,12 +366,16 @@ class MainController extends Controller
 
 
 		public function details(Request $request, $resultType){
-
+			if(!is_null($this->piwikTracker)){
+				$this->piwikTracker->setCustomVariable(5, "Type", $request->type, "page");
+				$this->piwikTracker->setCustomVariable(4, "OID", $request->id, "page");
+				$this->piwikTracker->doTrackPageView("ShowDetails_".$resultType);
+			}
 			switch($resultType){
 				case 'authors':
 					$id = $request->id;
 					$cat = $request->type;
-					if( ! $o = $this->api_call('/api/authors/'.$id)){
+					if( ! $o = $this->api_call('/authors/'.$id)){
 						abort(404);
 					}
 					
@@ -356,7 +399,7 @@ class MainController extends Controller
 					if($cat == 'publications'){
 						return View::make('details.authors.publications' ,$data);
 					}else{
-						$data['nestedprimary'] = $this->nestedPrimary($o->{$cat});
+						$data['newnestedprimary'] = $this->newNestedPrimary($o->{$cat});
 						return View::make('details.authors.citations' ,$data);
 					}
 					break;
@@ -364,7 +407,7 @@ class MainController extends Controller
 				case 'monographies':
 					$id = $request->id;
 					$cat = $request->type;
-					if( ! $o = $this->api_call('/api/books/'.$id)){
+					if( ! $o = $this->api_call('/books/'.$id)){
 						abort(404);
 					}
 					$cdC = 0;
@@ -388,7 +431,7 @@ class MainController extends Controller
 					if($cat == 'references'){
 						return View::make('details.monographies.references' ,$data);
 					}else{
-						$data['nestedprimary'] = $this->nestedPrimary($o->{$cat});
+						$data['newnestedprimary'] = $this->newNestedPrimary($o->{$cat});
 						return View::make('details.monographies.citations' ,$data);
 					}
 
@@ -397,7 +440,7 @@ class MainController extends Controller
 				case 'articles':
 					$id = $request->id;
 					$cat = $request->type;
-					if( ! $o = $this->api_call('/api/articles/'.$id)){
+					if( ! $o = $this->api_call('/articles/'.$id)){
 						abort(404);
 					}
 					$cdC = 0;
@@ -422,7 +465,7 @@ class MainController extends Controller
 					if($cat == 'references'){
 						return View::make('details.articles.references' ,$data);
 					}else{
-						$data['nestedprimary'] = $this->nestedPrimary($o->{$cat});
+						$data['newnestedprimary'] = $this->newNestedPrimary($o->{$cat});
 						return View::make('details.articles.citations' ,$data);
 					}
 
@@ -432,7 +475,7 @@ class MainController extends Controller
 				case 'primary_sources':
 					$id = $request->id;
 					$cat = $request->type;
-					if( ! $o = $this->api_call('/api/primary_sources/asve/'.$id)){
+					if( ! $o = $this->api_call('/primary_sources/asve/'.$id)){
 						abort(404);
 					}
 					$cgC = 0;
@@ -446,7 +489,7 @@ class MainController extends Controller
 					);
 
 
-					$data['nestedprimary'] = $this->nestedPrimary($o->citing);
+					$data['newnestedprimary'] = $this->newNestedPrimary($o->{$cat});
 					return View::make('details.primary_sources.citations' ,$data);
 
 					break;
@@ -455,68 +498,68 @@ class MainController extends Controller
 			}	
 		}
 
-		public function nestedPrimary($citations){
+		
 
-			$archives = array(
-				"Archivio di Stato di Venezia" => "asve"
-			);
+		public function newNestedPrimary($citations){
+			
+			
+			$counts = [];
+			$titles = [];
+			$flathierarchy = [];
+			$root = [];
+			$parents = [];
+			$labels = [];
 
-			$tabs = [];
-			$tabs['ps'] = [];
-			$tabs['root'] = [];
 			if(isset($citations->primary_sources)){
-			foreach($citations->primary_sources as $o){
-				if( ! isset($tabs['root'][$o->archive])) $tabs['root'][$o->archive] = 0;
-				$tabs['root'][$o->archive] += count($o->incoming_references);
-
-
-				if(!isset($tabs[$o->archive])) $tabs[$o->archive] = [];
-
-				if( ! $ps = $this->api_call('/api/primary_sources/'.$archives[$o->archive].'/'.$o->id)){
-					continue;
-				}
-				
-				if(count($ps->primary_source->hierarchy) == 1){
-					$tabs[$o->archive][] = $o;
-				}else{
-
-					$first = true;
-					for($i = count($ps->primary_source->hierarchy)-2; $i >= 0; $i--){
-
-						if($first) {
-							$tabs[$ps->primary_source->hierarchy[$i]->id][] = $o;
-							$tabs['ps'][$ps->primary_source->hierarchy[$i]->id] = $this->api_call('/api/primary_sources/'.$archives[$o->archive].'/'.$ps->primary_source->hierarchy[$i]->id)->primary_source;
-							$first = false;
+				foreach($citations->primary_sources as $o){
+					foreach($o->hierarchy as $id_h => $h){
+						#if(!isset($labels[$h->id])){
+						#	$labels[$h->id] = $h->document_type;
+						#}
+						if(!isset($flathierarchy[$h->id])){
+			 				$flathierarchy[$h->id] = array();
+							$counts[$h->id] = 0;
+							$titles[$h->id] = $h->title;
 						}
-						if($i == 0){	
-							if( ! isset($tabs[$o->archive][$ps->primary_source->hierarchy[$i]->id])) $tabs[$o->archive][$ps->primary_source->hierarchy[$i]->id] = 0;
-							$tabs[$o->archive][$ps->primary_source->hierarchy[$i]->id] += count($o->incoming_references);
+						if(!isset($flathierarchy[$o->archive])){
+							$flathierarchy[$o->archive] = array();
+							$counts[$o->archive] = 0;
+							$titles[$o->archive] = $o->archive;
+							$root[] = $o->archive;
 						}
-						if( $i != 0 && $first != true){
+						if($h->current){
+							if( ! isset($flathierarchy[$h->id]['refs'])){
+								$flathierarchy[$h->id]['refs'] = $o;
+							}else{
+								$flathierarchy[$h->id]['refs']->incoming_references = array_merge($flathierarchy[$h->id]['refs']->incoming_references, $o->incoming_references);
+							}
 							
-							if( ! isset($tabs[$ps->primary_source->hierarchy[$i-1]->id])) $tabs[$ps->primary_source->hierarchy[$i-1]->id] = [];
-							if( ! isset($tabs[$ps->primary_source->hierarchy[$i-1]->id][$ps->primary_source->hierarchy[$i]->id])) $tabs[$ps->primary_source->hierarchy[$i-1]->id][$ps->primary_source->hierarchy[$i]->id] = 0;
-							$tabs['ps'][$ps->primary_source->hierarchy[$i-1]->id] = $this->api_call('/api/primary_sources/'.$archives[$o->archive].'/'.$ps->primary_source->hierarchy[$i-1]->id)->primary_source;
-
-							$tabs[$ps->primary_source->hierarchy[$i-1]->id][$ps->primary_source->hierarchy[$i]->id] += count($o->incoming_references);
+							$counts[$h->id] += count($o->incoming_references);
+						}else{
+							if(!in_array($o->hierarchy[$id_h + 1]->id,$flathierarchy[$h->id]))
+								$flathierarchy[$h->id][] = $o->hierarchy[$id_h + 1]->id;
+							$counts[$h->id] += count($o->incoming_references);
 						}
+						if($id_h == 0){
+							if( ! in_array($h->id,$flathierarchy[$o->archive]))
+								$flathierarchy[$o->archive][] = $h->id;
 							
+							$counts[$o->archive] += count($o->incoming_references);
+						}
+						
+						$parents[$h->id] = ($id_h > 0) ? $o->hierarchy[$id_h-1]->id : $o->archive;
 					}
-
-
-
-
-
 				}
-
-
 			}
-			}
-			foreach($tabs as $k => $arr){
-				krsort($tabs[$k]);
-			}
-
-			return $tabs;
+			$data = [];
+			$data['root'] = $root;
+			$data['flathierarchy'] = $flathierarchy;
+			$data['titles'] = $titles;
+			$data['counts'] = $counts;
+			$data['parents'] = $parents;
+			$data['labels'] = $labels;
+	
+			return $data;
 		}
 
 
@@ -526,7 +569,7 @@ class MainController extends Controller
 				case 'authors':
 					$id = $request->id;
 					$cat = $request->type;
-					if( ! $o = $this->api_call('/api/authors/'.$id)){
+					if( ! $o = $this->api_call('/authors/'.$id)){
 						abort(404);
 					}
 					$cdC = 0;
@@ -545,17 +588,66 @@ class MainController extends Controller
 						'type' => $cat,
 						'cnt' => 1,
 					);
-		
+					if(!is_null($this->piwikTracker)){
+						$this->piwikTracker->setCustomVariable(4, "OID", $id, "page");
+						$this->piwikTracker->doTrackPageView("ShowAuthorSmallDetails");
+					}
 					return View::make('smalldetails.authors' ,$data);
 					break;
 			}	
+		}
+		
+		public function europeana(Request $request){
+			
+			$api_root = API_ROOT."/europeana/";
+			$rT = $request->resultType;
+			$id = $request->id;
+
+			switch($rT){
+				case 'authors':	$content = @file_get_contents($api_root."suggest?author_id=".$id); break;
+				case 'monographies':	$content = @file_get_contents($api_root."suggest?book_id=".$id); break;
+				case 'articles':	$content = @file_get_contents($api_root."suggest?article_id=".$id); break;
+			};
+			
+			if($content !== FALSE){
+
+				if(!is_null($this->piwikTracker)){
+					$this->piwikTracker->setCustomVariable(4, "OID", $id, "page");
+					$this->piwikTracker->doTrackPageView("Europeana_".$rT);
+				}			
+
+				$data = json_decode($content,1);
+
+			}else{
+				$data['error'] = 'Oops, there was an error while connecting with the Europeana API.';
+				$data['total'] = 0;
+			}
+			return View::make('europeana.layout', $data);
+		}
+		
+		public function europeanaMore(Request $request){
+			
+			$api_root = API_ROOT."/europeana/";
+			$q = $request->q;
+			$cursor = $request->cursor;
+			$content = @file_get_contents($api_root."suggest?query=".urlencode($q)."&cursor=".urlencode($cursor));
+			if($content !== FALSE){
+				$data = json_decode($content,1);
+				if(!is_null($this->piwikTracker)){
+					$this->piwikTracker->doTrackPageView("EuropeanaLoadMore");
+				}				
+			}else{
+				$data['error'] = 'Oops, there was an error while connecting with the Europeana API.';
+				$data['total'] = 0;
+			}
+			return View::make('europeana.results', $data);
 		}
 
 		public function refs(Request $request){
 			$references = array();
 			$rT = ($request->resultType == 'monographies') ? 'books' : $request->resultType;
 
-			if($o = $this->api_call('/api/'.$rT.'/'.($rT=='primary_sources'?'asve/':'').$request->oid)){
+			if($o = $this->api_call('/'.$rT.'/'.($rT=='primary_sources'?'asve/':'').$request->oid)){
 	
 				foreach($o->{$request->reftype}->{$request->refcat} as $refgroup){
 					if($request->refcat=='primary_sources'){
@@ -574,7 +666,10 @@ class MainController extends Controller
 				}
 
 			}
-
+			if(!is_null($this->piwikTracker)){
+				$this->piwikTracker->setCustomVariable(4, "OID", $request->oid, "page");
+				$this->piwikTracker->doTrackPageView("ShowReference_".$rT);
+			}
 			return View::make('details.references', array('references' => $references));
 		}
 
@@ -583,18 +678,18 @@ class MainController extends Controller
 			header("Content-Type: text/plain");
 			$output = "";
 
-			if($o = $this->api_call('/api/authors/'.$aid)){
+			if($o = $this->api_call('/authors/'.$aid)){
 				
 				$heights = [];
 				
-				$output .= '"title","type","journal","year","height"';
+				$output .= '"id","title","type","journal","year","height"';
 				$output .= "\n";
 				foreach($o->publications as $type => $items){
 					foreach($items as $i){
 						if($i->year > 0){
 							if(isset($heights[$i->year])) $heights[$i->year]++; else $heights[$i->year] = 0;
 							if(isset($i->journal_short_title)) $journal = "in «".$i->journal_short_title."»"; else $journal = "";
-							$output .= '"'.str_replace('"','""',$i->title).'","'.str_replace('"','""',$type).'","'.$journal.'","'.str_replace('"','""',$i->year).'","'.str_replace('"','""',$heights[$i->year]).'"';
+							$output .= '"'.$i->id.'","'.str_replace('"','""',$i->title).'","'.str_replace('"','""',$type).'","'.$journal.'","'.str_replace('"','""',$i->year).'","'.str_replace('"','""',$heights[$i->year]).'"';
 							$output .= "\n";
 						}
 					}
@@ -618,7 +713,7 @@ class MainController extends Controller
 			$output = '"start","end","citing","cited","citing_h","cited_h"';
 			$output .= "\n";
 
-			if($o = $this->api_call('/api/'.$api.'/'.$mid)){
+			if($o = $this->api_call('/'.$api.'/'.$mid)){
 			
 	
 				$counts = [];
@@ -745,6 +840,7 @@ class MainController extends Controller
 
 			Session::put('lastQuery', ['q' => $q, 'ns' => $ns, 'p' => $p/*, 'in' => $in*/]);
 
+
 			$this->connectSolr();
 
 			$fields = array(
@@ -792,7 +888,7 @@ class MainController extends Controller
 
 			$qry = implode(' OR ', $ORs);
 
-			if(count($filtrs)>0){
+			if(is_array($filtrs) && count($filtrs)>0){
 				foreach($filtrs as $field => $keys){
 					switch($field){
 						case 'year':
@@ -822,6 +918,11 @@ class MainController extends Controller
 			$response = $query_response->getResponse();
 			$results = array();
 			$i = $offset+1;
+			
+			if(!is_null($this->piwikTracker)){
+				$this->piwikTracker->doTrackSiteSearch($q, $ns, $response->response->numFound);
+				$this->piwikTracker->doTrackPageView("Search");
+			}
 			//echo "<!--".print_r($response,1).'-->';
 			if(is_array($response->response->docs)){
 				foreach($response->response->docs as $doc){
@@ -837,7 +938,7 @@ class MainController extends Controller
 					switch($doc->ns){
 						case LRBH : 
 
-							if(! $obj = $this->api_call('/api/authors/'.$doc->_id)){
+							if(! $obj = $this->api_call('/authors/'.$doc->_id)){
 								continue;
 							}
 							foreach($obj->cited as $type => $citations) $cited+=count($citations);
@@ -850,7 +951,7 @@ class MainController extends Controller
 							break;
 	
 						case LRBB : 
-							if(!$obj = $this->api_call('/api/books/'.$doc->_id)){continue;}
+							if(!$obj = $this->api_call('/books/'.$doc->_id)){continue;}
 							foreach($obj->cited as $type => $citations) $cited+=count($citations);
 							foreach($obj->citing as $type => $citations) $citing+=count($citations);
 							$title = (isset($obj->book->author[0])?$obj->book->author[0]->name." - ":"").$obj->book->title;
@@ -862,7 +963,7 @@ class MainController extends Controller
 							break;
 	
 						case LRBA : 
-							if(!$obj = $this->api_call('/api/articles/'.$doc->_id)){continue;}
+							if(!$obj = $this->api_call('/articles/'.$doc->_id)){continue;}
 							foreach($obj->cited as $type => $citations) $cited+=count($citations);
 							foreach($obj->citing as $type => $citations) $citing+=count($citations);
 							$title = (isset($obj->article->author[0])?$obj->article->author[0]->name." - ":"").$obj->article->title;
@@ -874,19 +975,19 @@ class MainController extends Controller
 							$recordOK = true;	
 							break;
 						case LRR : 
-							if(!$obj = $this->api_call('/api/references/'.$doc->_id)){continue;}
+							if(!$obj = $this->api_call('/references/'.$doc->_id)){continue;}
 
 							switch($obj->containing_document_type){
 								case 'article':
-									if(!$parent = $this->api_call('/api/articles/'.$obj->containing_document_id)){continue;}
-									$uri ="http://lbc_dev.archives.world/article/viewer/".$obj->containing_document_id."#".$obj->start_img_number;
+									if(!$parent = $this->api_call('/articles/'.$obj->containing_document_id)){continue;}
+									$uri = "//".LBC_HOST."/article/viewer/".$obj->containing_document_id."#".$obj->start_img_number;
 									$title = str_limit($obj->reference_string, $limit = 130, $end = '...')." <a href='".$uri."' target='_blank'><i class='fa fa-link'></i></a>";
 									$subtitle = (isset($parent->article->author[0])?$parent->article->author[0]->name." - ":"").$parent->article->title.", ".$parent->article->year." p. ".$obj->start_img_number;
 									break;
 	
 								case 'book':
-									if(!$parent = $this->api_call('/api/books/'.$obj->containing_document_id)){continue;}
-									$uri = "http://lbc_dev.archives.world/document/viewer/".$obj->bid."#".$obj->start_img_number;
+									if(!$parent = $this->api_call('/books/'.$obj->containing_document_id)){continue;}
+									$uri = "//".LBC_HOST."/document/viewer/".$obj->bid."#".$obj->start_img_number;
 									$title = str_limit($obj->reference_string, $limit = 130, $end = '...')." <a href='".$uri."' target='_blank'><i class='fa fa-link'></i></a>";
 									$subtitle = (isset($parent->book->author[0])?$parent->book->author[0]->name." - ":"").$parent->book->title.", ".$parent->book->year;
 									break;
@@ -903,7 +1004,7 @@ class MainController extends Controller
 							break;
 	
 						case LRBV : 
-							if(!$obj = $this->api_call('/api/primary_sources/asve/'.$doc->_id)){continue;}
+							if(!$obj = $this->api_call('/primary_sources/asve/'.$doc->_id)){continue;}
 							
 							$title = "Archive of Venice, ".$obj->primary_source->internal_id;
 							$subtitle = $obj->primary_source->label;							
@@ -922,8 +1023,8 @@ class MainController extends Controller
 								echo '<ul>';
 									if($occurrences != "")
 										echo '<li>Found occurences in DB: '.$occurrences.'</li>';
-									echo '<li>Citing: '.$citing.'</li>';
-									echo '<li>Cited by: '.$cited.'</li>';
+									echo '<li>Is citing: '.$citing.'</li>';
+									echo '<li>Has been cited by: '.$cited.'</li>';
 								echo '</ul>';
 							}
 						echo '</div>';
@@ -935,7 +1036,71 @@ class MainController extends Controller
 			}
 		}
 
+	public function suggester(Request $request){
+		
+		$q = $request->q;	
+	
+		if($q == ""){
+			echo "";
+			return;
+		}else{
+				
+			$this->connectSolr();
+			
+			$query = new \SolrQuery;
+			$query->setRows(3);			
+			$query->setQuery("ns:".ROOT."bibliodb_authors AND author_final_form:(".str_replace(' ','* ',$q)."*)");
+			$query_response = $this->solrconnection->query($query);
+			$response = $query_response->getResponse();
+			if($response->response->numFound > 0){
+				foreach($response->response->docs as $d){
+					echo "<a class='author' href=/results#details=".$d->_id."&rT=authors&type=publications&refcat=&refid='>".$d->author_final_form."</a>";				
+				}
+			}
+			
+			$query = new \SolrQuery;
+			$query->setRows(3);			
+			$query->setQuery("ns:".ROOT."bibliodb_books AND title:(".str_replace(' ','* ',$q)."*)");
+			$query_response = $this->solrconnection->query($query);
+			$response = $query_response->getResponse();
+			
+			if($response->response->numFound > 0){
+				foreach($response->response->docs as $d){
+					echo "<a class='book' href='/results#details=".$d->_id."&rT=monographies&type=references&refcat=&refid='>".$d->title."</a>";				
+				}
+			}
 
+			$query = new \SolrQuery;
+			$query->setRows(3);			
+			$query->setQuery("ns:".ROOT."bibliodb_articles AND title:(".str_replace(' ','* ',$q)."*)");
+			$query_response = $this->solrconnection->query($query);
+			$response = $query_response->getResponse();
+			
+			if($response->response->numFound > 0){
+				foreach($response->response->docs as $d){
+					echo "<a class='article' href='/results#details=".$d->_id."&rT=articles&type=references&refcat=&refid='>".$d->title."</a>";				
+				}
+			}
+			
+						
+			$query = new \SolrQuery;
+			$query->setRows(3);			
+			$query->setQuery("ns:".ROOT."bibliodb_asve AND label:(".str_replace(' ','* ',$q)."*)");
+			$query_response = $this->solrconnection->query($query);
+			$response = $query_response->getResponse();
+			
+			if($response->response->numFound > 0){
+				foreach($response->response->docs as $d){
+					echo "<a class='asve' href='/results#details=".$d->_id."&rT=primary_sources&type=citing&refcat=&refid='>".$d->label."</a>";				
+				}
+			}
+
+	
+		}
+				
+
+		
+	}
 
 
 }

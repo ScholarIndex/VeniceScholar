@@ -5,13 +5,26 @@
 <div class="mainsearch">
 	<div class="searchfield">
 		<input class="searchinput" />
-		<i class="fa fa-caret-down"></i>
-		<i class="fa fa-caret-right"></i>	
+		<!--<i class="fa fa-caret-down"></i>
+		<i class="fa fa-caret-right"></i>-->
 	</div>
+	<div class="suggestlist"></div>
 	<!--<ul class="filters">
 		<li class="chk {{isset($data['in']['contributions']) && $data['in']['contributions']=='false' ? '' : 'checked'}} contributions">Contributions</li>
 		<li class="chk {{isset($data['in']['references']) && $data['in']['references']=='false' ? '' : 'checked'}} references">References</li>
 	</ul>-->
+	<div class="sample">
+		<strong>Need some query tips? Here some things you can search for:</strong>
+		<br /><br />
+<ul>
+<li>Patricia Fortini Brown (author)</li>
+<li>Giustizia Vecchia (archival fund)</li>
+<li>L’editoria veneziana nel ‘700 (monograph)</li>
+<li>The “Tre Savii sopra l’Eresia” (journal article)</li>
+</ul>
+	</div>
+	
+
 	<div  class="advancedsearch">
 		<a href="#" class="closebutton">×</a>
 		<ul class="advfields">

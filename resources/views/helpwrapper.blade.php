@@ -7,8 +7,8 @@
 	<p class="search c2">Search box</p>
 	<p class="search c3">Login and out, About page and Statistics of the database</p>
 	<p class="search c4">Categories of results with number of results each</p>
-	<p class="search c5">Number of received citations (citing)</p>
-	<p class="search c6">Number of given citations (Cited by), if zero, the source has not been digitised and parsed</p>
+	<p class="search c5">Number of received citations (Is citing)</p>
+	<p class="search c6">Number of given citations (Has been cited by), if zero, the source has not been digitised and parsed</p>
 	<p class="search c7">Results are distributed over pages</p>
 	<p class="search c8">Results over primary sources and references (full text match)</p>
 	<p class="search c9">Results are couloured by typology</p>
